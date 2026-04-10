@@ -2,6 +2,13 @@
 
 WordPress site managed via GitHub Actions + WP Engine.
 
+## Getting Started
+
+1. Clone the repo: `git clone https://github.com/aatifwaza-tru/mcp-server-wp-engine.git`
+2. Check out the `dev` branch: `git checkout dev`
+3. Add the required GitHub Secrets (see below)
+4. Push to `dev` to trigger a deployment to the development environment
+
 ## Branches
 
 | Branch | Environment |
@@ -28,6 +35,12 @@ Every push to a deployment branch triggers the following:
 
 1. **PHP Lint** — scans all `.php` files for syntax errors
 2. **Deploy** — pushes to the corresponding WP Engine environment via SSH
+
+## Local Development
+
+- Use a local WordPress environment (e.g. [LocalWP](https://localwp.com/) or [Lando](https://lando.dev/))
+- Install dependencies with `composer install` if a `composer.json` is present
+- Run PHP lint locally: `find . -name "*.php" -not -path "./vendor/*" | xargs php -l`
 
 ## Required GitHub Secrets
 
