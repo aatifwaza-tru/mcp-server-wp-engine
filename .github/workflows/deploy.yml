@@ -1,0 +1,50 @@
+name: Deploy to WP Engine
+
+on:
+  push:
+    branches:
+      - main
+      - stg
+      - qa
+      - dev
+
+jobs:
+  lint:
+    name: PHP Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+
+      - name: Run PHP lint
+        run: find . -name "*.php" -not -path "./vendor/*" | xargs -I {} php -l {}
+
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set WP Engine environment
+        id: set-env
+        run: |
+          if [ "${{ github.ref_name }}" = "main" ]; then
+            echo "WPE_ENV=${{ secrets.WPE_PROD_ENV_NAME }}" >> $GITHUB_OUTPUT
+          elif [ "${{ github.ref_name }}" = "stg" ]; then
+            echo "WPE_ENV=${{ secrets.WPE_STAGING_ENV_NAME }}" >> $GITHUB_OUTPUT
+          else
+            echo "WPE_ENV=${{ secrets.WPE_DEV_ENV_NAME }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Deploy to WP Engine via SSH
+        uses: wpengine/github-action-wpe-site-deploy@v3
+        with:
+          WPE_SSHG_KEY_PRIVATE: ${{ secrets.WPE_SSHG_KEY_PRIVATE }}
+          WPE_ENV: ${{ steps.set-env.outputs.WPE_ENV }}
