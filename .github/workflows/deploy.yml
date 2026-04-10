@@ -20,8 +20,8 @@ jobs:
         with:
           php-version: '8.2'
 
-      - name: Lint PHP files
-        run: find . -name '*.php' -not -path './vendor/*' | xargs -r php -l
+      - name: Run PHP lint
+        run: find . -name "*.php" -not -path "./vendor/*" | xargs -I {} php -l {}
 
   deploy:
     name: Deploy
@@ -33,26 +33,18 @@ jobs:
           fetch-depth: 0
 
       - name: Set WP Engine environment
-        id: env
+        id: set-env
         run: |
-          BRANCH=${GITHUB_REF#refs/heads/}
-          if [ "$BRANCH" = "main" ]; then
-            echo "WPE_ENV=${{ secrets.WPE_PROD_ENV_NAME }}" >> $GITHUB_ENV
-          elif [ "$BRANCH" = "stg" ]; then
-            echo "WPE_ENV=${{ secrets.WPE_STAGING_ENV_NAME }}" >> $GITHUB_ENV
-          elif [ "$BRANCH" = "qa" ]; then
-            echo "WPE_ENV=${{ secrets.WPE_STAGING_ENV_NAME }}" >> $GITHUB_ENV
-          elif [ "$BRANCH" = "dev" ]; then
-            echo "WPE_ENV=${{ secrets.WPE_DEV_ENV_NAME }}" >> $GITHUB_ENV
+          if [ "${{ github.ref_name }}" = "main" ]; then
+            echo "WPE_ENV=${{ secrets.WPE_PROD_ENV_NAME }}" >> $GITHUB_OUTPUT
+          elif [ "${{ github.ref_name }}" = "stg" ]; then
+            echo "WPE_ENV=${{ secrets.WPE_STAGING_ENV_NAME }}" >> $GITHUB_OUTPUT
+          else
+            echo "WPE_ENV=${{ secrets.WPE_DEV_ENV_NAME }}" >> $GITHUB_OUTPUT
           fi
 
-      - name: Deploy via SSH to WP Engine
-        env:
+      - name: Deploy to WP Engine via SSH
+        uses: wpengine/github-action-wpe-site-deploy@v3
+        with:
           WPE_SSHG_KEY_PRIVATE: ${{ secrets.WPE_SSHG_KEY_PRIVATE }}
-        run: |
-          echo "$WPE_SSHG_KEY_PRIVATE" | base64 --decode > /tmp/wpe_key
-          chmod 600 /tmp/wpe_key
-          mkdir -p ~/.ssh
-          ssh-keyscan -p 22 git.wpengine.com >> ~/.ssh/known_hosts
-          git remote add wpe git@git.wpengine.com:production/${WPE_ENV}.git
-          git push wpe HEAD:master --force
+          WPE_ENV: ${{ steps.set-env.outputs.WPE_ENV }}
