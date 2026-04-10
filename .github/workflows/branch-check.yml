@@ -1,0 +1,32 @@
+name: Branch Merge Order Check
+
+on:
+  pull_request:
+    branches:
+      - main
+      - stg
+      - qa
+
+jobs:
+  check-merge-order:
+    name: Enforce Merge Order
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check branch merge order
+        run: |
+          BASE=${GITHUB_BASE_REF}
+          HEAD=${GITHUB_HEAD_REF}
+
+          echo "PR from '$HEAD' into '$BASE'"
+
+          if [ "$BASE" = "main" ] && [ "$HEAD" != "stg" ]; then
+            echo "ERROR: main can only receive merges from stg."
+            exit 1
+          fi
+
+          if [ "$BASE" = "stg" ] && [ "$HEAD" != "dev" ] && [ "$HEAD" != "qa" ]; then
+            echo "ERROR: stg can only receive merges from dev or qa."
+            exit 1
+          fi
+
+          echo "Merge order OK."
