@@ -52,12 +52,11 @@ jobs:
             echo "WPE_ENV=${{ secrets.WPE_DEV_ENV_NAME }}" >> $GITHUB_ENV
           fi
 
-      - name: Configure SSH key
+      - name: Setup known_hosts for WP Engine SSH
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.WPE_SSHG_KEY_PRIVATE }}" > ~/.ssh/wpe_deploy_key
-          chmod 600 ~/.ssh/wpe_deploy_key
-          ssh-keyscan -t rsa git.wpengine.com >> ~/.ssh/known_hosts
+          mkdir -p /root/.ssh
+          ssh-keyscan -t rsa ssh.wpengine.net >> /root/.ssh/known_hosts
+          chmod 644 /root/.ssh/known_hosts
 
       - name: Deploy to WP Engine
         uses: wpengine/github-action-wpe-site-deploy@v3
