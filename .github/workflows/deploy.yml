@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+      - stg
+      - qa
       - dev
 
 jobs:
@@ -42,6 +44,10 @@ jobs:
         run: |
           if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
             echo "WPE_ENV=${{ secrets.WPE_PROD_ENV_NAME }}" >> $GITHUB_ENV
+          elif [[ "${{ github.ref }}" == "refs/heads/stg" ]]; then
+            echo "WPE_ENV=${{ secrets.WPE_STAGING_ENV_NAME }}" >> $GITHUB_ENV
+          elif [[ "${{ github.ref }}" == "refs/heads/qa" ]]; then
+            echo "WPE_ENV=${{ secrets.WPE_STAGING_ENV_NAME }}" >> $GITHUB_ENV
           elif [[ "${{ github.ref }}" == "refs/heads/dev" ]]; then
             echo "WPE_ENV=${{ secrets.WPE_DEV_ENV_NAME }}" >> $GITHUB_ENV
           fi
